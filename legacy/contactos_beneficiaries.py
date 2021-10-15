@@ -3,10 +3,13 @@ import pandas as pd
 import simple_salesforce
 import numpy as np
 from conexion_gina import *
-from api_sf import *
 
 
 contactos = instancia('Contact')
+
+Contactos_metadata = sf.Contact.describe()
+df_contactos_metadata = pd.DataFrame(Contactos_metadata.get('fields'))
+df_contactos_metadata.to_csv('contactos_metadata.csv', index = False)
 
 benef = """  SELECT distinct  Becado.Id AS id_db__c, Becado.Nombre_Razon AS FirstName, Becado.Apellido AS LastName, Becado.FechaNacimiento AS Birthdate, Becado.NumDocumento AS DNI__c, Becado.Cuil_Cuit AS Cuil__c,
 				Becado.Genero AS Genero__c, Becado.Tel AS HomePhone, Becado.Cel AS MobilePhone, Becado.Email AS Email, Domicilio.Direccion AS MailingStreet,
