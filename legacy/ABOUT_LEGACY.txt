@@ -1,0 +1,3 @@
+El código de esta sección corresponde al base para src, solo se sube a los efectos de ordenar la información.
+
+Borrar una vez se haya consolidado el src y extraído y documentado todo el código.
