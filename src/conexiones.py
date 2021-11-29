@@ -1,8 +1,11 @@
 ## Test conexiones
-import json
 import pandas as pd
 import simple_salesforce as sf
+
 from simple_salesforce import Salesforce, SFType, SalesforceLogin
+from ast import literal_eval
+
+from sfConnection import sfConnection
 
 """
 -Ver si existe la posibilidad de eliminaciones masivas
@@ -13,36 +16,18 @@ Delete:
 """
 
 #Conexion a SF
-
-#Credenciales
-
-login = json.load(open('credenciales.json'))
-username = login['username']
-password = login['password']
-security_token = login['security_token']
-domain = 'login'
-
-# Me conecto a la org de SF
-session_id, instance = SalesforceLogin(username=username, password=password, security_token=security_token, domain=domain)
+creds = 'credenciales.json'
 
 ## Creo una instancia de sf 
-sf = Salesforce(instance=instance, session_id=session_id)
-
-def instancia(obj_name):
-    """
-    :param objname: nombre de un objeto de SF (ej.: objeto__c)
-    :return: un objeto asociado al objeto de SF
-    """
-    object_inst =  SFType(obj_name, session_id, instance)
-    return object_inst
-
-##################################################################
-contactos = instancia('Contact')
+inst = sfConnection(json_creds=creds)
 
 # Obtengo metadata
-obj_metadata = sf[nombre_objeto].describe() # TODO Alen: Revisar validez de la sintaxis
+accion = 'describe()'
+nombre_objeto = ""
+obj_metadata = literal_eval(f"inst.{nombre_objeto}.{accion}")
 df_contactos_metadata = pd.DataFrame(obj_metadata.get('fields')) # Devuelve un dict pero lo convertimos
 
+"""
 # Salesforce 
 ## le tengo que pasar los campos que quiero, no puedo poner 'SELECT *' como en SQL
 query = 'SELECT Id, AccountId, id_db__c FROM Contact'
@@ -55,3 +40,4 @@ benef = primer_migracion.to_dict('records')
 resultado = sf.bulk.Contact.insert(benef)
 print(resultado) # -----> Esto me muestra qué errores hubo
 ###################################################################
+"""
