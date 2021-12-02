@@ -54,7 +54,7 @@ class SFConnection():
         object_inst =  SFType(obj_name, self.session_id, self.instance)
         return object_inst
 
-    def query(self, nombre_objeto: str, fields: list or str, getid=False, conds=None):
+    def query(self, nombre_objeto: str, fields='all', getid=False, conds=None):
         """Funcion que ejecuta una query en SF
 
         Realiza consultas al objeto 'source' de sf para los campos 'fields'\n
@@ -64,28 +64,32 @@ class SFConnection():
             nombre_objeto (str): Objeto del cual obtiene la información y al cual pertenecen
                                  los campos de 'fields'
             getid (bool): Indica si se desea retornar el campo Id de los registros.
-            conds (str): condiciones SQL para la consulta. CUIDADO, el código no posee mayores controles.
+            conds (str): condiciones SQL para la consulta. CUIDADO, el código no posee 
+                         mayores controles.
         Returns:
             pandas DataFrame: Dataframe que contiene la consulta en formato tabular
         """
         if str.isidentifier(nombre_objeto) is False:
             raise ValueError("El nombre del objeto es inválido")
+   
         if conds is not None:
             if ';' in conds:
                 raise ValueError("Las condiciones poseen una expresión no permitida.")
-        if getid is True:
-            try:
-                fields.index('Id')
-            except ValueError:
-                fields = ['Id'] + fields
+
+        if isinstance(fields, list) and (getid is True) and ('Id' not in fields):
+            fields = ['Id'] + fields
+
         if fields == 'all':
             _fields = ','.join(self._get_metadata(nombre_objeto, 'fields')['name'].to_list())
         else:
             _fields = ','.join(fields)
-        _query = f"SELECT {_fields} FROM {nombre_objeto}"
+
+        _query = f"SELECT {_fields} FROM {nombre_objeto} "
+
         if conds is not None:
             _query += conds
-        res = exec(f"self.sf_object.bulk.{nombre_objeto}.query(_query + \';\')")
+
+        res = eval(f"self.sf_object.bulk.{nombre_objeto}.query(_query)")
         res = pd.DataFrame(res)
         return res
 
