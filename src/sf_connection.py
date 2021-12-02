@@ -1,6 +1,7 @@
 import json
 from tkinter import filedialog
 import pandas as pd
+from pandas.core.indexing import check_bool_indexer
 from simple_salesforce import Salesforce, SFType, SalesforceLogin
 
 KEYS = {'username','password','security_token'}
@@ -43,7 +44,7 @@ class SFConnection():
 
         self.sf_object = Salesforce(instance=self.instance, session_id=self.session_id)
 
-    def get_objeto(self, obj_name:str) -> SFType:
+    def get_objeto(self, nombre_objeto:str) -> SFType:
         """Retorna un objeto manipulable de Salesforce
 
         Args:
@@ -51,44 +52,41 @@ class SFConnection():
         Returns:
             SFType: Elemento asociado al objeto de SF
         """
-        object_inst =  SFType(obj_name, self.session_id, self.instance)
+        object_inst =  SFType(nombre_objeto, self.session_id, self.instance)
         return object_inst
 
-    def query(self, nombre_objeto: str, fields='all', getid=False, conds=None):
+    def query(self, nombre_objeto: str, fields='all', getid=False, conds=None) -> pd.DataFrame:
         """Funcion que ejecuta una query en SF
 
-        Realiza consultas al objeto 'source' de sf para los campos 'fields'\n
+        Realiza consultas al objeto 'source' de sf para los campos 'fields'
         Args:
             fields (list or str): Lista de campos que devuelve la query. Si se settea a 'all'
-                                  consulta por todos los campos.
+                                  consulta por todos los campos excepto los de tipo 'Compound Field'
+                                  debido a limitaciones de la API misma.
             nombre_objeto (str): Objeto del cual obtiene la información y al cual pertenecen
                                  los campos de 'fields'
             getid (bool): Indica si se desea retornar el campo Id de los registros.
-            conds (str): condiciones SQL para la consulta. CUIDADO, el código no posee 
+            conds (str): condiciones SQL para la consulta. CUIDADO, el código no posee
                          mayores controles.
         Returns:
             pandas DataFrame: Dataframe que contiene la consulta en formato tabular
         """
-        if str.isidentifier(nombre_objeto) is False:
-            raise ValueError("El nombre del objeto es inválido")
-   
+        self._check_obj_valido(nombre_objeto)
         if conds is not None:
             if ';' in conds:
-                raise ValueError("Las condiciones poseen una expresión no permitida.")
+                raise ValueError("Las condiciones poseen una expresión no permitida (';').")
 
         if isinstance(fields, list) and (getid is True) and ('Id' not in fields):
             fields = ['Id'] + fields
 
         if fields == 'all':
-            _fields = ','.join(self._get_metadata(nombre_objeto, 'fields')['name'].to_list())
+            _fields = ','.join(self.get_campos(nombre_objeto,not_compound=True)['name'].to_list())
         else:
             _fields = ','.join(fields)
 
         _query = f"SELECT {_fields} FROM {nombre_objeto} "
-
         if conds is not None:
             _query += conds
-
         res = eval(f"self.sf_object.bulk.{nombre_objeto}.query(_query)")
         res = pd.DataFrame(res)
         return res
@@ -96,8 +94,7 @@ class SFConnection():
     def insert(self, data:dict or pd.DataFrame, nombre_objeto: str):
         """Agrega los registros en 'data' al objeto 'nombre_objeto'
         """
-        if str.isidentifier(nombre_objeto) is False:
-            raise ValueError("El nombre del objeto es inválido")
+        self._check_obj_valido(nombre_objeto)
         res = eval(f"self.sf_object.bulk.{nombre_objeto}.insert(data)")
         return pd.DataFrame(res)
 
@@ -129,7 +126,39 @@ class SFConnection():
         Returns:
             pandas DataFrame: Dataframe que contiene la metadata solicitada en formato tabular.
         """
-        if str.isidentifier(nombre_objeto) is False:
-            raise ValueError("El nombre del objeto es inválido")
+        self._check_obj_valido(nombre_objeto)
         obj_metadata = eval(f"self.sf_object.{nombre_objeto}.describe()")
         return pd.DataFrame(obj_metadata.get(propiedad))
+
+    def _check_obj_valido(self, nombre_obj:str):
+        if str.isidentifier(nombre_obj):
+            if nombre_obj in [dict(x)['name'] for x in dict(self.sf_object.describe())['sobjects']] == False:
+                raise KeyError("El nombre de campo no pertenece a la instancia de Salesforce.")
+        else:
+            raise ValueError("El nombre del campo es inválido, revise la sintaxis.")
+
+    def get_campos(self, nombre_objeto: str, not_compound=False):
+        """Retorna un pandas DataFrame con todos los campos, sus nombres y labels
+            Args:
+                nombre_objeto (str): Nombre del objeto que se quiere describir
+            Returns:
+                pandas DataFrame: Dataframe con campos y labels correspondientes.
+                    'names' son los nombres reales de los campos en el sistema y
+                    'labels' los nombres dados por el usuario al crearlos
+        """
+        self._check_obj_valido(nombre_objeto)
+        b = self._get_metadata(nombre_objeto,'fields')
+        if not_compound==True:
+          b = b[~(b['name'].str.endswith('Address') | b['name'].str.startswith('longitude') | b['name'].str.startswith('latitude'))]
+        return b[['name', 'label']]
+
+    def update(self, nombre_objeto: str, condicion_registros: str, dict_cambios:dict):
+        self._check_obj_valido(nombre_objeto)
+        ids = self.query(nombre_objeto, fields=['Id'], conds=condicion_registros)['Id'].to_list()
+
+        for id in ids:
+            eval(f"self.sf_object.{nombre_objeto}.update(id, dict_cambios)")
+
+    def delete(self):
+        # Hay que hacer un hard_delete, no delete a secas
+        pass
