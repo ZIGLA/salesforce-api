@@ -136,6 +136,9 @@ class SFConnection():
                 raise KeyError("El nombre de campo no pertenece a la instancia de Salesforce.")
         else:
             raise ValueError("El nombre del campo es inválido, revise la sintaxis.")
+    
+    def get_objetos(self) -> list:
+        return [x['name'] for x in self.sf_object.describe()["sobjects"]]
 
     def get_campos(self, nombre_objeto: str, not_compound=False):
         """Retorna un pandas DataFrame con todos los campos, sus nombres y labels
