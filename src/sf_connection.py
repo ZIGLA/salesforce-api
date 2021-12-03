@@ -14,7 +14,7 @@ class SFConnection():
     sobre sus objetos
     """
 
-    def __init__(self, json_creds=None, domain='login'):
+    def __init__(self, json_creds, domain='login'):
         """Crea una instancia del objeto sfConnections
 
         Args:
@@ -27,10 +27,10 @@ class SFConnection():
             Objeto de sesion de SF
         """
         super().__init__()
-        if json_creds is not None:
-            self.credentials = json.load(open(json_creds, encoding='utf-8'))
-        elif json_creds == 'load':
+        if json_creds == 'load':
             self.get_credentials_dialog()
+        self.credentials = json.load(open(json_creds, encoding='utf-8'))
+
         if set(self.credentials.keys()) != KEYS:
             _keys = list(KEYS)
             _keys.sort()
