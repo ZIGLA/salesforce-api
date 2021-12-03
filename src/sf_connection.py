@@ -29,8 +29,8 @@ class SFConnection():
         super().__init__()
         if json_creds is not None:
             self.credentials = json.load(open(json_creds, encoding='utf-8'))
-        elif self.credentials is None:
-            raise RuntimeError('No hay credenciales inicializadas.')
+        elif json_creds == 'load':
+            self.get_credentials_dialog()
         if set(self.credentials.keys()) != KEYS:
             _keys = list(KEYS)
             _keys.sort()
