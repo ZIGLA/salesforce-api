@@ -98,6 +98,13 @@ class SFConnection():
         res = eval(f"self.sf_object.bulk.{nombre_objeto}.insert(data)")
         return pd.DataFrame(res)
 
+    def upsert(self, data:dict or pd.DataFrame, id_externo, nombre_objeto: str):
+        """Agrega los registros en 'data' al objeto 'nombre_objeto' con el id externo 'id_externo'
+        """
+        self._check_obj_valido(nombre_objeto)
+        res = eval(f"self.sf_object.bulk.{nombre_objeto}.upsert(data,id_externo)")
+        return pd.DataFrame(res)
+
     def get_credentials_dialog(self, encoding='utf-8'):
         """Abre un cuadro de dialogo para cargar credenciales
 
