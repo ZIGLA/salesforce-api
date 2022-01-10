@@ -169,6 +169,9 @@ class SFConnection():
         for id in ids:
             eval(f"self.sf_object.{nombre_objeto}.update(id, dict_cambios)")
 
-    def delete(self):
-        # Hay que hacer un hard_delete, no delete a secas
-        pass
+    def delete(self, nombre_objeto):
+        if 'Id' not in list(data.columns):
+            raise ValueError('El campo \'Id\' es obligatorio')
+        self._check_obj_valido(nombre_objeto)
+        res = eval(f"self.sf_object.bulk.{nombre_objeto}.delete(data)")
+        return pd.DataFrame(res)
