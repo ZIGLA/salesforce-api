@@ -55,7 +55,7 @@ class SFConnection():
         object_inst =  SFType(nombre_objeto, self.session_id, self.instance)
         return object_inst
 
-    def query(self, nombre_objeto: str, fields='all', getid=False, conds=None, batch_size=10000) -> pd.DataFrame:
+    def query(self, nombre_objeto: str, fields='all', getid=False, conds=None) -> pd.DataFrame:
         """Funcion que ejecuta una query en SF
 
         Realiza consultas al objeto 'source' de sf para los campos 'fields'
@@ -88,7 +88,7 @@ class SFConnection():
         if conds is not None:
             _query += conds
 
-        res = eval(f"self.sf_object.bulk.{nombre_objeto}.query(_query, batch_size={batch_size})")
+        res = eval(f"self.sf_object.bulk.{nombre_objeto}.query(_query)")
         res = pd.DataFrame(res)
         return res
 
