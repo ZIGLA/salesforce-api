@@ -179,7 +179,7 @@ class SFConnection():
                      {'Id':'string_id2', 'campo2':'nuevo_valor2'}]
         """
         self._check_obj_valido(nombre_objeto)
-        eval(f"self.sf_object.bulk.{nombre_objeto}.update(dict_cambios, batch_size=10000,use_serial=True)")
+        eval(f"self.sf_object.bulk.{nombre_objeto}.update(list_cambios, batch_size=10000,use_serial=True)")
         
     def delete(self, nombre_objeto: str, data: pd.DataFrame):
         self._check_obj_valido(nombre_objeto)
