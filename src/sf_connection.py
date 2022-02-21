@@ -170,6 +170,17 @@ class SFConnection():
         for id in ids:
             eval(f"self.sf_object.{nombre_objeto}.update(id, dict_cambios)")
 
+    def bulk_update(self, nombre_objeto:str, list_cambios:list):
+        """Efectúa un update para varios registros.
+            Args:
+                listt_cambios (lsit): debe contener el Id de los registros y los campos a modificar en
+                el siguiente formato: 
+                    [{'Id':'string_id1', 'campo1':'nuevo_valor1'},
+                     {'Id':'string_id2', 'campo2':'nuevo_valor2'}]
+        """
+        self.check_obj_valido(nombre_objeto)
+        eval(f"self.bulk.{nombre_objeto}.update(dict_cambios, batch_size=10000,use_serial=True)")
+        
     def delete(self, nombre_objeto: str, data: pd.DataFrame):
         self._check_obj_valido(nombre_objeto)
         res = eval(f"self.sf_object.bulk.{nombre_objeto}.delete(data)")
