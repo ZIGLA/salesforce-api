@@ -4,46 +4,7 @@ import pandas as pd
 from pandas.core.indexing import check_bool_indexer
 from simple_salesforce import Salesforce, SFType, SalesforceLogin
 
-KEYS = {'username','password','security_token'}
-
-class SFConnection():
-    """Objeto de conexion a Salesforce
-
-    Crea una conexion en funcion de las credenciales
-    que se le provean y efectúa consultas u operaciones
-    sobre sus objetos
-    """
-
-    def __init__(self, json_creds, domain='login'):
-        """Crea una instancia del objeto sfConnections
-
-        Args:
-            json_creds (str): Path donde se encuentra el archivo JSON con las credenciales.
-            Deben corresponderse con las del entorno al que se va a acceder. Si se accede
-            a uno de desarrollo (testing) deben usarse esas credenciales.
-            domain (str): Dominio al que conectarse. Es 'login' por omisión y debe ser cambiado
-            a 'test' para funcionar en entornos de testing/desarrollo.
-        Returns:
-            Objeto de sesion de SF
-        """
-        super().__init__()
-        if json_creds == 'load':
-            self.get_credentials_dialog()
-        self.credentials = json.load(open(json_creds, encoding='utf-8'))
-
-        if set(self.credentials.keys()) != KEYS:
-            _keys = list(KEYS)
-            _keys.sort()
-            raise KeyError(f"Credentials do not match the required keys: {','.join(_keys)}.")
-
-        # Credentials keys dont match
-        self.session_id, self.instance = SalesforceLogin(username=self.credentials['username'],
-                                                  password=self.credentials['password'],
-                                                  security_token=self.credentials['security_token'],
-                                                  domain=domain)
-
-        self.sf_object = Salesforce(instance=self.instance, session_id=self.session_id)
-
+class SFConnectionJWT():
     def __init__(self, username, consumer_key, privatekey):
         self.sf_object = Salesforce(username=username, consumer_key=consumer_key, privatekey=privatekey)
 
