@@ -44,9 +44,6 @@ class SFConnection():
 
         self.sf_object = Salesforce(instance=self.instance, session_id=self.session_id)
 
-    def __init__(self, username, consumer_key, privatekey):
-        self.sf_object = Salesforce(username=username, consumer_key=consumer_key, privatekey=privatekey)
-
     def get_objeto(self, nombre_objeto:str) -> SFType:
         """Retorna un objeto manipulable de Salesforce
 
